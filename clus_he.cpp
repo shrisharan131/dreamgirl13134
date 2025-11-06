@@ -319,3 +319,142 @@ int main() {
 
     return 0;
 }
+
+
+
+
+///Clustering if distace matrix is given 
+#include <bits/stdc++.h>
+using namespace std;
+
+// Print distance matrix with cluster labels
+void printMatrix(const vector<vector<double>> &dist, const vector<string> &labels) {
+    int n = dist.size();
+    cout << "\nDistance Matrix:\n";
+    cout << setw(10) << "";
+    for (auto &l : labels) cout << setw(10) << l;
+    cout << endl;
+    for (int i = 0; i < n; i++) {
+        cout << setw(10) << labels[i];
+        for (int j = 0; j < n; j++)
+            cout << setw(10) << fixed << setprecision(3) << dist[i][j];
+        cout << endl;
+    }
+}
+
+// Single Linkage
+void singleLinkage(vector<vector<double>> dist, vector<string> labels) {
+    int n = dist.size();
+    vector<bool> merged(n, false);
+
+    cout << "--- Single Linkage Clustering ---\n";
+    for (int step = 1; step < n; step++) {
+        double minDist = 1e18;
+        int x=-1, y=-1;
+
+        for (int i=0;i<n;i++) {
+            if(merged[i]) continue;
+            for(int j=i+1;j<n;j++){
+                if(merged[j]) continue;
+                if(dist[i][j]<minDist){ minDist=dist[i][j]; x=i; y=j; }
+            }
+        }
+
+        cout << "\nStep " << step << ": Merge (" << labels[x] << "," << labels[y] << ") distance=" << minDist << endl;
+
+        for(int i=0;i<n;i++){
+            if(i!=x && i!=y && !merged[i])
+                dist[x][i] = dist[i][x] = min(dist[x][i], dist[y][i]);
+        }
+
+        merged[y]=true;
+        labels[x]=labels[x]+"+"+labels[y];
+        printMatrix(dist, labels);
+    }
+    cout << "Final Cluster: " << labels[0] << endl;
+}
+
+// Complete Linkage
+void completeLinkage(vector<vector<double>> dist, vector<string> labels) {
+    int n = dist.size();
+    vector<bool> merged(n,false);
+    cout << "--- Complete Linkage Clustering ---\n";
+    for(int step=1; step<n; step++){
+        double minDist=1e18;
+        int x=-1,y=-1;
+        for(int i=0;i<n;i++){
+            if(merged[i]) continue;
+            for(int j=i+1;j<n;j++){
+                if(merged[j]) continue;
+                if(dist[i][j]<minDist){ minDist=dist[i][j]; x=i; y=j; }
+            }
+        }
+
+        cout << "\nStep "<<step<<": Merge ("<<labels[x]<<","<<labels[y]<<") distance="<<minDist<<endl;
+
+        for(int i=0;i<n;i++){
+            if(i!=x && i!=y && !merged[i])
+                dist[x][i] = dist[i][x] = max(dist[x][i], dist[y][i]);
+        }
+
+        merged[y]=true;
+        labels[x]=labels[x]+"+"+labels[y];
+        printMatrix(dist, labels);
+    }
+    cout<<"Final Cluster: "<<labels[0]<<endl;
+}
+
+// Average Linkage
+void averageLinkage(vector<vector<double>> dist, vector<string> labels) {
+    int n=dist.size();
+    vector<bool> merged(n,false);
+    vector<int> size(n,1); // cluster sizes
+
+    cout<<"--- Average Linkage Clustering ---\n";
+    for(int step=1; step<n; step++){
+        double minDist=1e18;
+        int x=-1,y=-1;
+        for(int i=0;i<n;i++){
+            if(merged[i]) continue;
+            for(int j=i+1;j<n;j++){
+                if(merged[j]) continue;
+                if(dist[i][j]<minDist){ minDist=dist[i][j]; x=i; y=j; }
+            }
+        }
+
+        cout<<"\nStep "<<step<<": Merge ("<<labels[x]<<","<<labels[y]<<") distance="<<minDist<<endl;
+
+        for(int i=0;i<n;i++){
+            if(i!=x && i!=y && !merged[i]){
+                dist[x][i] = dist[i][x] = (dist[x][i]*size[x] + dist[y][i]*size[y])/(size[x]+size[y]);
+            }
+        }
+
+        merged[y]=true;
+        size[x]+=size[y];
+        labels[x]=labels[x]+"+"+labels[y];
+        printMatrix(dist, labels);
+    }
+    cout<<"Final Cluster: "<<labels[0]<<endl;
+}
+
+int main() {
+    // Hardcoded example
+    vector<string> labels = {"A","B","C","D"};
+    vector<vector<double>> dist = {
+        {0,2,6,10},
+        {2,0,5,9},
+        {6,5,0,4},
+        {10,9,4,0}
+    };
+
+    cout << "Original Labels: ";
+    for(auto &l: labels) cout << l << " ";
+    cout << endl;
+
+    // Choose linkage
+    singleLinkage(dist, labels);
+    
+
+    return 0;
+}
